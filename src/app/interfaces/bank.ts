@@ -13,6 +13,8 @@ export interface Bank {
   rating: number;
   accountTypes: AccountType[];
   loanLimit: LoanLimit;
+  website: string;
+  ceo: string;
 }
 export interface AccountType {
   name: string;

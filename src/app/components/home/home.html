@@ -1,1 +1,128 @@
-<p>home works!</p>
+<nav class="top-nav">
+  <div class="logo">
+    <span class="logo-main">WORLDSBANK</span>
+    <span class="logo-sub">BY GIKTEK</span>
+  </div>
+</nav>
+
+<main class="dashboard-shell">
+  <section class="hero">
+    <div class="hero-copy">
+      <p class="eyebrow">WorldsBank dashboard</p>
+      <h1>Choose the right bank for your next account.</h1>
+      <p class="hero-text">
+        Compare trusted banking partners, opening deposits, loan limits, and digital features in
+        one place.
+      </p>
+    </div>
+
+    <div class="hero-visual">
+      <img
+        src="/assets/images/jason-leung-SAYzxuS1O3M-unsplash.jpg"
+        alt="Assorted international bank notes"
+      />
+      <div class="hero-logo-stack">
+        @for (bank of bankService.banks; track bank.id) {
+          <div class="logo-tile" [style.--bank-color]="bank.colour">
+            <img [src]="bank.logo" [alt]="bank.name + ' logo'" />
+          </div>
+        }
+      </div>
+    </div>
+  </section>
+
+  <section class="logo-strip" aria-label="Bank logos">
+    @for (bank of bankService.banks; track bank.id) {
+      <div class="brand-logo" [style.--bank-color]="bank.colour">
+        <img [src]="bank.logo" [alt]="bank.name + ' logo'" />
+      </div>
+    }
+  </section>
+
+  <section class="image-feature">
+    <div class="feature-image">
+      <img
+        src="/assets/images/micheile-henderson-ZVprbBmT8QA-unsplash.jpg"
+        alt="Coins in a glass with a growing plant"
+      />
+    </div>
+    <div class="feature-copy">
+      <p class="section-label">Smart growth</p>
+      <h2>Compare savings, lending, and account options before you commit.</h2>
+      <p>
+        Use the bank cards below to scan minimum deposits, interest rates, loan limits, and the
+        digital features that fit how you manage money.
+      </p>
+      <div class="partner-mark">
+        <img src="/assets/banks/litemore_limited_logo.jpeg" alt="Zeraki logo" />
+        <span>Digital partner</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="toolbar" aria-label="Bank search">
+    <div>
+      <p class="section-label">Available banks</p>
+      <h2>{{ banks().length }} banking options</h2>
+    </div>
+
+    <label class="search-field">
+      <span>Search</span>
+      <input
+        type="search"
+        placeholder="KCB, Equity, ABSA..."
+        [value]="bankService.searchQuery()"
+        (input)="updateSearch($event)"
+      />
+    </label>
+  </section>
+
+  <section class="bank-grid">
+    @for (bank of banks(); track bank.id) {
+      <article class="bank-card" [style.--bank-color]="bank.colour">
+        <div class="card-top">
+          <div class="bank-logo">
+            <img [src]="bank.logo" [alt]="bank.name + ' logo'" />
+          </div>
+          <div class="rating">{{ bank.rating | number: '1.1-1' }}/5</div>
+        </div>
+
+        <div class="bank-heading">
+          <p>{{ bank.shortName }}</p>
+          <h3>{{ bank.name }}</h3>
+          <span>{{ bank.tagline }}</span>
+        </div>
+
+        <div class="stats">
+          <div>
+            <span>Min deposit</span>
+            <strong>KES {{ bank.minDeposit | number: '1.0-0' }}</strong>
+          </div>
+          <div>
+            <span>Interest</span>
+            <strong>{{ bank.interestRate }}%</strong>
+          </div>
+          <div>
+            <span>Personal loan</span>
+            <strong>KES {{ bank.loanLimit.personal | number: '1.0-0' }}</strong>
+          </div>
+        </div>
+
+        <ul class="feature-list">
+          @for (feature of bank.features.slice(0, 3); track feature) {
+            <li>{{ feature }}</li>
+          }
+        </ul>
+
+        <a class="bank-link" [href]="bank.website" target="_blank" rel="noreferrer">
+          Visit bank
+        </a>
+      </article>
+    } @empty {
+      <div class="empty-state">
+        <h3>No banks found</h3>
+        <p>Try searching by bank name or short name.</p>
+      </div>
+    }
+  </section>
+</main>

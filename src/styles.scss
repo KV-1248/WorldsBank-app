@@ -17,6 +17,7 @@
   --danger: #E74C3C;
   --success: #27AE60;
   --warning: #F39C12;
+
   // --- Layout ---
   --radius: 12px;
   --radius-lg: 20px;
@@ -49,19 +50,18 @@ body {
 
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: var(--sky-surface);
+  background: transparent;
   color: var(--text-primary);
   line-height: 1.6;
 }
 
 // ============================================
 // GLOBAL REUSABLE CLASSES
-// These you can drop on any element anywhere
 // ============================================
 
 .btn-primary {
   background: var(--accent);
-  color: var(--text-light);
+  color: var(--text-inverted);
   border: none;
   border-radius: var(--radius);
   padding: var(--space-sm) var(--space-xl);
@@ -94,7 +94,7 @@ body {
 
   &:hover {
     background: var(--accent);
-    color: var(--text-light);
+    color: var(--text-inverted);
   }
 }
 

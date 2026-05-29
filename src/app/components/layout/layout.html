@@ -1,0 +1,76 @@
+<div class="app-layout" [class.sidebar-open]="sidebarOpen">
+
+  <!-- Sidebar -->
+  <aside class="sidebar" [class.open]="sidebarOpen">
+    <div class="sidebar-header">
+      <div class="logo">
+        <span class="logo-main">WORLDSBANK</span>
+        <span class="logo-sub">BY GIKTEK</span>
+      </div>
+      <button class="close-btn" (click)="toggleSidebar()">✕</button>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a routerLink="/dashboard" routerLinkActive="active" (click)="closeSidebar()">
+        <span class="nav-icon">🏠</span>
+        <span class="nav-label">Dashboard</span>
+      </a>
+      <a routerLink="/transactions" routerLinkActive="active" (click)="closeSidebar()">
+        <span class="nav-icon">💸</span>
+        <span class="nav-label">Transactions</span>
+      </a>
+      <a routerLink="/banks" routerLinkActive="active" (click)="closeSidebar()">
+        <span class="nav-icon">🏦</span>
+        <span class="nav-label">Banks</span>
+      </a>
+      <a routerLink="/ai-assistant" routerLinkActive="active" (click)="closeSidebar()">
+        <span class="nav-icon">🤖</span>
+        <span class="nav-label">FinAI</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="logo">
+        <span class="logo-main">WORLDSBANK</span>
+        <span class="logo-sub">BY GIKTEK</span>
+      </div>
+      <button class="logout-btn" (click)="logout()">
+        <span>🚪</span> Logout
+      </button>
+    </div>
+  </aside>
+
+  <!-- Overlay -->
+  <div class="overlay" [class.visible]="sidebarOpen" (click)="closeSidebar()"></div>
+
+  <!-- Main content -->
+  <div class="main-content">
+
+    <!-- Top bar -->
+    <header class="topbar">
+      <button class="hamburger" (click)="toggleSidebar()">☰</button>
+
+      <!-- Sticky search -->
+      <div class="search-bar">
+        <span class="search-icon">🔍</span>
+        <input
+          type="text"
+          [(ngModel)]="searchQuery"
+          placeholder="Search transactions, banks..."
+          (input)="onSearch()"
+        />
+      </div>
+
+      <div class="topbar-right">
+        <span class="user-name">{{ userName }}</span>
+        <div class="user-avatar">{{ userInitial }}</div>
+      </div>
+    </header>
+
+    <!-- Page content -->
+    <main class="page-content">
+      <router-outlet></router-outlet>
+    </main>
+
+  </div>
+</div>

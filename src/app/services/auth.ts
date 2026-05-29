@@ -1,62 +1,101 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
+import { Observable, tap } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
 })
 export class Auth {
+  private http = inject(HttpClient);
   private router = inject(Router);
 
-  //---signals---
+  private baseUrl = 'http://localhost:8080/api/v1/auth';
+
+  // --- signals ---
   private _isLoggedIn = signal<boolean>(false);
   private _currentUser = signal<string | null>(null);
+  private _pendingEmail = signal<string | null>(null);
 
-  //---Read only exposed signals---
+  // --- readonly signals ---
   isLoggedIn = this._isLoggedIn.asReadonly();
   currentUser = this._currentUser.asReadonly();
+  pendingEmail = this._pendingEmail.asReadonly();
 
-  //---computed signals---
+  // --- computed ---
   greetings = computed(() => {
     const user = this._currentUser();
     return user ? `Welcome back, ${user}!` : 'Welcome, Guest!';
   });
 
-  //---Hardcoded test case users ---
-  private users = [
-    { email: 'user@worldsbank.com', password: 'Kamau123', name: 'Kamau Njuguna' },
-    { email: 'test@worldsbank.com', password: 'Kamau123', name: 'Test User' },
-  ];
-  // ---Login method---
-  login(email: string, password: string): boolean {
-    const matchingUser = this.users.find((U) => U.email === email && U.password === password);
-
-    if (matchingUser) {
-      this._isLoggedIn.set(true);
-      this._currentUser.set(matchingUser.name);
-      localStorage.setItem('wb_token', 'dummy-jwt-token');
-      localStorage.setItem('wb_user', matchingUser.name);
-      return true;
-    }
-    return false;
+  // --- Register ---
+  register(data: any): Observable<any> {
+    return this.http.post(`${this.baseUrl}/register`, data, {
+      responseType: 'text'
+    });
   }
 
-  //---Logout method---
+  // --- Verify Account Activation OTP ---
+  verifyOtp(email: string, otp: string): Observable<any> {
+    this._pendingEmail.set(email);
+    return this.http.post(`${this.baseUrl}/verify-otp`, { email, otp }, {
+      responseType: 'text'
+    });
+  }
+
+  // --- Login Step 1 — send credentials, get OTP ---
+  login(email: string, password: string): Observable<any> {
+    this._pendingEmail.set(email);
+    return this.http.post(`${this.baseUrl}/login`, { email, password }, {
+      responseType: 'text'
+    });
+  }
+
+  // --- Login Step 2 — verify login OTP, get JWT ---
+  verifyLoginOtp(email: string, otp: string): Observable<any> {
+    return this.http.post(`${this.baseUrl}/verify-login-otp`, { email, otp }).pipe(
+      tap((response: any) => {
+        localStorage.setItem('wb_token', response.token);
+        localStorage.setItem('wb_user', response.firstName + ' ' + response.lastName);
+        localStorage.setItem('wb_email', response.email);
+        this._isLoggedIn.set(true);
+        this._currentUser.set(response.firstName + ' ' + response.lastName);
+      })
+    );
+  }
+
+  // --- Resend OTP ---
+  resendOtp(email: string, otpType: string): Observable<any> {
+    return this.http.post(
+      `${this.baseUrl}/resend-otp?email=${email}&otpType=${otpType}`,
+      {},
+      { responseType: 'text' }
+    );
+  }
+
+  // --- Logout ---
   logout(): void {
     this._isLoggedIn.set(false);
     this._currentUser.set(null);
+    this._pendingEmail.set(null);
     localStorage.removeItem('wb_token');
     localStorage.removeItem('wb_user');
+    localStorage.removeItem('wb_email');
     this.router.navigate(['/login']);
   }
 
-  // method called on app startup to restore session
+  // --- Restore session on app startup ---
   checkSession(): void {
     const token = localStorage.getItem('wb_token');
     const user = localStorage.getItem('wb_user');
-
     if (token && user) {
       this._isLoggedIn.set(true);
       this._currentUser.set(user);
     }
+  }
+
+  // --- Get token for HTTP calls ---
+  getToken(): string | null {
+    return localStorage.getItem('wb_token');
   }
 }

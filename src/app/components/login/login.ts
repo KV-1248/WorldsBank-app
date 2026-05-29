@@ -1,18 +1,20 @@
 import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { Auth } from '../../services/auth';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-login',
-  imports: [FormsModule],
+  imports: [FormsModule, CommonModule, RouterLink],
   templateUrl: './login.html',
-  styleUrl: './login.scss',
+  styleUrl: './login.scss'
 })
 export class Login {
   email = '';
   password = '';
   errorMessage = '';
+  loading = false;
 
   private auth = inject(Auth);
   private router = inject(Router);
@@ -22,18 +24,18 @@ export class Login {
       this.errorMessage = 'Please fill in all fields.';
       return;
     }
+    this.loading = true;
+    this.errorMessage = '';
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(this.email)) {
-      this.errorMessage = 'Please enter a valid email address.';
-      return;
-    }
-
-    const success = this.auth.login(this.email, this.password);
-    if (success) {
-      this.router.navigate(['/home']);
-    } else {
-      this.errorMessage = 'Invalid email or password.';
-    }
+    this.auth.login(this.email, this.password).subscribe({
+      next: () => {
+        this.loading = false;
+        this.router.navigate(['/verify-login-otp']);
+      },
+      error: (err) => {
+        this.loading = false;
+        this.errorMessage = err.error?.message || 'Invalid email or password.';
+      }
+    });
   }
 }

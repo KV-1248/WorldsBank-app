@@ -14,12 +14,12 @@
 
     <div class="login-form">
       <div class="form-group">
-        <label for="email">Work Email</label>
+        <label for="email">Email Address</label>
         <input
           id="email"
           type="email"
           [(ngModel)]="email"
-          placeholder="user@worldsbank.com"
+          placeholder="Enter your email"
           autocomplete="email"
         />
       </div>
@@ -39,7 +39,13 @@
         <div class="error-message">{{ errorMessage }}</div>
       }
 
-      <button class="login-btn" (click)="login()">Continue →</button>
+      <button class="login-btn" (click)="login()" [disabled]="loading">
+        {{ loading ? 'Signing in...' : 'Continue →' }}
+      </button>
+
+      <button class="register-btn" routerLink="/register">
+        Create Account
+      </button>
     </div>
   </div>
 </div>

@@ -1,1 +1,132 @@
-<p>Dashboard works</p>
+<div class="dashboard">
+
+  <!-- Welcome banner -->
+  <div class="welcome-banner">
+    <div class="welcome-text">
+      <h1>Welcome back, {{ userName() }} 👋</h1>
+      <p>Here's your WorldsBank overview</p>
+    </div>
+    <div class="wban-badge">
+      <span class="wban-label">WBAN</span>
+      <span class="wban-number">{{ account()?.wban || '—' }}</span>
+    </div>
+  </div>
+
+  <!-- Balance card -->
+  <div class="balance-card">
+    <div class="balance-info">
+      <span class="balance-label">Total Balance</span>
+      <span class="balance-amount">
+        {{ account()?.baseCurrency }} {{ account()?.balance | number:'1.2-2' }}
+      </span>
+      <span class="account-status" [class.active]="account()?.status === 'ACTIVE'">
+        {{ account()?.status || 'Loading...' }}
+      </span>
+    </div>
+    <div class="balance-icon">💳</div>
+  </div>
+
+  <!-- Regional conversion -->
+  @if (conversion()) {
+    <div class="conversion-card">
+      <h3>📍 Regional Value</h3>
+      <div class="conversion-details">
+        <div class="conversion-item">
+          <span class="conv-label">{{ conversion()?.targetCurrency }} Value</span>
+          <span class="conv-value">
+            {{ conversion()?.targetCurrency }}
+            {{ conversion()?.convertedBalance | number:'1.2-2' }}
+          </span>
+        </div>
+        <div class="conversion-item">
+          <span class="conv-label">Exchange Rate</span>
+          <span class="conv-value">
+            1 {{ conversion()?.baseCurrency }} =
+            {{ conversion()?.conversionRate }} {{ conversion()?.targetCurrency }}
+          </span>
+        </div>
+        <div class="conversion-item">
+          <span class="conv-label">Transaction Fee (2.5%)</span>
+          <span class="conv-value conv-fee">
+            {{ conversion()?.targetCurrency }}
+            {{ conversion()?.transactionFeeAmount | number:'1.2-2' }}
+          </span>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Quick actions -->
+  <div class="quick-actions">
+    <h2>Quick Actions</h2>
+    <div class="actions-grid">
+      <button class="action-btn" routerLink="/transactions">
+        <span class="action-icon">⬆️</span>
+        <span>Deposit</span>
+      </button>
+      <button class="action-btn" routerLink="/transactions">
+        <span class="action-icon">⬇️</span>
+        <span>Withdraw</span>
+      </button>
+      <button class="action-btn" routerLink="/transactions">
+        <span class="action-icon">↗️</span>
+        <span>Transfer</span>
+      </button>
+      <button class="action-btn" routerLink="/banks">
+        <span class="action-icon">🏦</span>
+        <span>Link Bank</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Linked banks -->
+  @if (linkedBanks().length > 0) {
+    <div class="linked-banks">
+      <h2>Linked Banks</h2>
+      <div class="banks-list">
+        @for (bank of linkedBanks(); track bank.accountNumber) {
+          <div class="bank-item">
+            <div class="bank-info">
+              <span class="bank-name">{{ bank.bankName }}</span>
+              <span class="bank-country">{{ bank.country }}</span>
+            </div>
+            <div class="bank-balance">
+              <span>{{ bank.currency }} {{ bank.balance | number:'1.2-2' }}</span>
+              <span class="bank-status">{{ bank.status }}</span>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Recent transactions -->
+  @if (recentTransactions().length > 0) {
+    <div class="recent-transactions">
+      <h2>Recent Transactions</h2>
+      <div class="transactions-list">
+        @for (tx of recentTransactions(); track tx.id) {
+          <div class="tx-item">
+            <div class="tx-icon">
+              {{ tx.type === 'DEPOSIT' ? '⬆️' : tx.type === 'WITHDRAWAL' ? '⬇️' : '↗️' }}
+            </div>
+            <div class="tx-info">
+              <span class="tx-type">{{ tx.type }}</span>
+              <span class="tx-desc">{{ tx.description }}</span>
+            </div>
+            <div class="tx-amount" [class.credit]="tx.type === 'DEPOSIT'"
+                 [class.debit]="tx.type !== 'DEPOSIT'">
+              {{ tx.type === 'DEPOSIT' ? '+' : '-' }}
+              {{ tx.currency }} {{ tx.amount | number:'1.2-2' }}
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="loading">Loading your account...</div>
+  }
+
+</div>

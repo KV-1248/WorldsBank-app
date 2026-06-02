@@ -1,1 +1,42 @@
-<p>Verify OTP works</p>
+<nav class="top-nav">
+  <div class="logo">
+    <span class="logo-main">WORLDSBANK</span>
+    <span class="logo-sub">BY GIKTEK</span>
+  </div>
+</nav>
+
+<div class="login-container">
+  <div class="login-card">
+    <div class="login-header">
+      <h1>Verify your account</h1>
+      <p>Enter the OTP sent to {{ email }}</p>
+    </div>
+
+    <div class="login-form">
+      <div class="form-group">
+        <label>OTP Code</label>
+        <input
+          type="text"
+          [(ngModel)]="otp"
+          placeholder="Enter 6-digit OTP"
+          maxlength="6"
+        />
+      </div>
+
+      @if (errorMessage) {
+        <div class="error-message">{{ errorMessage }}</div>
+      }
+      @if (successMessage) {
+        <div class="success-message">{{ successMessage }}</div>
+      }
+
+      <button class="login-btn" (click)="verify()" [disabled]="loading">
+        {{ loading ? 'Verifying...' : 'Verify Account →' }}
+      </button>
+
+      <button class="register-btn" (click)="resend()" [disabled]="resending">
+        {{ resending ? 'Sending...' : 'Resend OTP' }}
+      </button>
+    </div>
+  </div>
+</div>

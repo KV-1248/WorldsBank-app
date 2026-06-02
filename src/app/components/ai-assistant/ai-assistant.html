@@ -1,1 +1,59 @@
-<p>AI Assistant works</p>
+<div class="finai-page">
+
+  <div class="finai-header">
+    <div class="finai-avatar">🤖</div>
+    <div>
+      <h1>FinAI</h1>
+      <p>Your WorldsBank Financial Assistant</p>
+    </div>
+  </div>
+
+  <!-- Chat messages -->
+  <div class="chat-window">
+    @if (messages().length === 0) {
+      <div class="empty-chat">
+        <p>👋 Hi {{ userName() }}! I'm FinAI.</p>
+        <p>Ask me anything about your finances.</p>
+        <div class="suggestions">
+          <button (click)="askSuggestion('Give me a summary of my transactions')">
+            📊 Transaction summary
+          </button>
+          <button (click)="askSuggestion('How can I save more money?')">
+            💰 Savings advice
+          </button>
+          <button (click)="askSuggestion('Analyze my spending patterns')">
+            📈 Spending analysis
+          </button>
+        </div>
+      </div>
+    }
+
+    @for (msg of messages(); track $index) {
+      <div class="message" [class.user]="msg.role === 'user'" [class.ai]="msg.role === 'ai'">
+        <div class="msg-avatar">{{ msg.role === 'user' ? '👤' : '🤖' }}</div>
+        <div class="msg-content">{{ msg.content }}</div>
+      </div>
+    }
+
+    @if (loading()) {
+      <div class="message ai">
+        <div class="msg-avatar">🤖</div>
+        <div class="msg-content typing">FinAI is thinking...</div>
+      </div>
+    }
+  </div>
+
+  <!-- Input -->
+  <div class="chat-input">
+    <input
+      type="text"
+      [(ngModel)]="question"
+      placeholder="Ask FinAI anything..."
+      (keyup.enter)="ask()"
+    />
+    <button (click)="ask()" [disabled]="loading() || !question">
+      Send →
+    </button>
+  </div>
+
+</div>

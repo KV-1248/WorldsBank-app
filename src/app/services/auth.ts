@@ -1,7 +1,7 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, tap } from 'rxjs';
+import { Observable, tap, timeout } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -11,6 +11,7 @@ export class Auth {
   private router = inject(Router);
 
   private baseUrl = 'http://localhost:8080/api/v1/auth';
+  private requestTimeoutMs = 30000;
 
   // --- signals ---
   private _isLoggedIn = signal<boolean>(false);
@@ -32,7 +33,7 @@ export class Auth {
   register(data: any): Observable<any> {
     return this.http.post(`${this.baseUrl}/register`, data, {
       responseType: 'text'
-    });
+    }).pipe(timeout(this.requestTimeoutMs));
   }
 
   // --- Verify Account Activation OTP ---
@@ -40,7 +41,7 @@ export class Auth {
     this._pendingEmail.set(email);
     return this.http.post(`${this.baseUrl}/verify-otp`, { email, otp }, {
       responseType: 'text'
-    });
+    }).pipe(timeout(this.requestTimeoutMs));
   }
 
   // --- Login Step 1 — send credentials, get OTP ---
@@ -48,12 +49,13 @@ export class Auth {
     this._pendingEmail.set(email);
     return this.http.post(`${this.baseUrl}/login`, { email, password }, {
       responseType: 'text'
-    });
+    }).pipe(timeout(this.requestTimeoutMs));
   }
 
   // --- Login Step 2 — verify login OTP, get JWT ---
   verifyLoginOtp(email: string, otp: string): Observable<any> {
     return this.http.post(`${this.baseUrl}/verify-login-otp`, { email, otp }).pipe(
+      timeout(this.requestTimeoutMs),
       tap((response: any) => {
         localStorage.setItem('wb_token', response.token);
         localStorage.setItem('wb_user', response.firstName + ' ' + response.lastName);
@@ -70,7 +72,7 @@ export class Auth {
       `${this.baseUrl}/resend-otp?email=${email}&otpType=${otpType}`,
       {},
       { responseType: 'text' }
-    );
+    ).pipe(timeout(this.requestTimeoutMs));
   }
 
   // --- Logout ---

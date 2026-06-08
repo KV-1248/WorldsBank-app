@@ -61,8 +61,20 @@ export class Register {
       },
       error: (err) => {
         this.loading = false;
-        this.errorMessage = err.error?.message || 'Registration failed. Try again.';
+        this.errorMessage = this.getErrorMessage(err);
       }
     });
+  }
+
+  private getErrorMessage(err: any): string {
+    if (err.name === 'TimeoutError') {
+      return 'Registration is taking too long. Check the backend logs for the register request, email/OTP sending, and database connection.';
+    }
+
+    if (typeof err.error === 'string' && err.error.trim()) {
+      return err.error;
+    }
+
+    return err.error?.message || 'Registration failed. Try again.';
   }
 }

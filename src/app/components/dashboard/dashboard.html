@@ -26,102 +26,280 @@
     <div class="balance-icon">💳</div>
   </div>
 
-  <!-- Regional conversion -->
-  @if (conversion()) {
-    <div class="conversion-card">
-      <h3>📍 Regional Value</h3>
-      <div class="conversion-details">
-        <div class="conversion-item">
-          <span class="conv-label">{{ conversion()?.targetCurrency }} Value</span>
-          <span class="conv-value">
-            {{ conversion()?.targetCurrency }}
-            {{ conversion()?.convertedBalance | number:'1.2-2' }}
-          </span>
-        </div>
-        <div class="conversion-item">
-          <span class="conv-label">Exchange Rate</span>
-          <span class="conv-value">
-            1 {{ conversion()?.baseCurrency }} =
-            {{ conversion()?.conversionRate }} {{ conversion()?.targetCurrency }}
-          </span>
-        </div>
-        <div class="conversion-item">
-          <span class="conv-label">Transaction Fee (2.5%)</span>
-          <span class="conv-value conv-fee">
-            {{ conversion()?.targetCurrency }}
-            {{ conversion()?.transactionFeeAmount | number:'1.2-2' }}
-          </span>
-        </div>
-      </div>
-    </div>
-  }
-
-  <!-- Quick actions -->
-  <div class="quick-actions">
-    <h2>Quick Actions</h2>
-    <div class="actions-grid">
-      <button class="action-btn" routerLink="/transactions">
-        <span class="action-icon">⬆️</span>
-        <span>Deposit</span>
-      </button>
-      <button class="action-btn" routerLink="/transactions">
-        <span class="action-icon">⬇️</span>
-        <span>Withdraw</span>
-      </button>
-      <button class="action-btn" routerLink="/transactions">
-        <span class="action-icon">↗️</span>
-        <span>Transfer</span>
-      </button>
-      <button class="action-btn" routerLink="/banks">
-        <span class="action-icon">🏦</span>
-        <span>Link Bank</span>
-      </button>
-    </div>
+  <!-- Dashboard Tabs -->
+  <div class="dash-tabs">
+    <button [class.active]="dashTab === 'overview'" (click)="dashTab = 'overview'">Overview</button>
+    <button [class.active]="dashTab === 'convert'" (click)="dashTab = 'convert'">Currency Converter</button>
+    <button [class.active]="dashTab === 'loan'" (click)="dashTab = 'loan'; loadLoanData()">Apply for Loan</button>
   </div>
 
-  <!-- Linked banks -->
-  @if (linkedBanks().length > 0) {
-    <div class="linked-banks">
-      <h2>Linked Banks</h2>
-      <div class="banks-list">
-        @for (bank of linkedBanks(); track bank.accountNumber) {
-          <div class="bank-item">
-            <div class="bank-info">
-              <span class="bank-name">{{ bank.bankName }}</span>
-              <span class="bank-country">{{ bank.country }}</span>
+  <!-- OVERVIEW TAB -->
+  @if (dashTab === 'overview') {
+
+    <!-- Regional conversion -->
+    @if (conversion()) {
+      <div class="conversion-card">
+        <h3>📍 Regional Value — USD</h3>
+        <div class="conversion-details">
+          <div class="conversion-item">
+            <span class="conv-label">USD Value</span>
+            <span class="conv-value">
+              USD {{ conversion()?.convertedBalance | number:'1.2-2' }}
+            </span>
+          </div>
+          <div class="conversion-item">
+            <span class="conv-label">Exchange Rate</span>
+            <span class="conv-value">
+              1 KES = {{ conversion()?.conversionRate }} USD
+            </span>
+          </div>
+          <div class="conversion-item">
+            <span class="conv-label">Transaction Fee (2.5%)</span>
+            <span class="conv-value conv-fee">
+              USD {{ conversion()?.transactionFeeAmount | number:'1.2-2' }}
+            </span>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Quick actions -->
+    <div class="quick-actions">
+      <h2>Quick Actions</h2>
+      <div class="actions-grid">
+        <button class="action-btn" routerLink="/transactions">
+          <span class="action-icon">⬆️</span>
+          <span>Deposit</span>
+        </button>
+        <button class="action-btn" routerLink="/transactions">
+          <span class="action-icon">⬇️</span>
+          <span>Withdraw</span>
+        </button>
+        <button class="action-btn" routerLink="/transactions">
+          <span class="action-icon">↗️</span>
+          <span>Transfer</span>
+        </button>
+        <button class="action-btn" routerLink="/banks">
+          <span class="action-icon">🏦</span>
+          <span>Link Bank</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Linked banks -->
+    @if (linkedBanks().length > 0) {
+      <div class="linked-banks">
+        <h2>Linked Banks</h2>
+        <div class="banks-list">
+          @for (bank of linkedBanks(); track bank.accountNumber) {
+            <div class="bank-item">
+              <div class="bank-info">
+                <span class="bank-name">{{ bank.bankName }}</span>
+                <span class="bank-country">{{ bank.country }}</span>
+              </div>
+              <div class="bank-balance">
+                <span>{{ bank.currency }} {{ bank.balance | number:'1.2-2' }}</span>
+                <span class="bank-status">{{ bank.status }}</span>
+              </div>
             </div>
-            <div class="bank-balance">
-              <span>{{ bank.currency }} {{ bank.balance | number:'1.2-2' }}</span>
-              <span class="bank-status">{{ bank.status }}</span>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Recent transactions -->
+    @if (recentTransactions().length > 0) {
+      <div class="recent-transactions">
+        <h2>Recent Transactions</h2>
+        <div class="transactions-list">
+          @for (tx of recentTransactions(); track tx.id) {
+            <div class="tx-row">
+              <div class="tx-icon">{{ getTxIcon(tx) }}</div>
+              <div class="tx-info">
+                <span class="tx-type">{{ getTxLabel(tx) }}</span>
+                <span class="tx-desc">{{ tx.description }}</span>
+                @if (tx.senderWban && tx.receiverWban) {
+                  <span class="tx-parties">{{ tx.senderWban }} → {{ tx.receiverWban }}</span>
+                }
+                @if (tx.linkedBankName) {
+                  <span class="tx-parties">To {{ tx.linkedBankName }}</span>
+                }
+                <span class="tx-date">{{ tx.createdAt | date:'short' }}</span>
+              </div>
+              <div class="tx-amount"
+                   [class.credit]="isCredit(tx)"
+                   [class.debit]="!isCredit(tx)">
+                {{ isCredit(tx) ? '+' : '-' }}
+                {{ tx.currency }} {{ tx.amount | number:'1.2-2' }}
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  }
+
+  <!-- CURRENCY CONVERTER TAB -->
+  @if (dashTab === 'convert') {
+    <div class="converter-card">
+      <h2>💱 Currency Converter</h2>
+      <p class="converter-sub">Convert your WorldsBank balance to any currency</p>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Amount (KES)</label>
+          <input type="number" [(ngModel)]="convertAmount"
+                 placeholder="Enter amount" />
+        </div>
+        <div class="form-group">
+          <label>Target Currency</label>
+          <select [(ngModel)]="convertCurrency" (change)="resetConversion()">
+            <option value="USD">USD — US Dollar</option>
+            <option value="EUR">EUR — Euro</option>
+            <option value="GBP">GBP — British Pound</option>
+            <option value="INR">INR — Indian Rupee</option>
+            <option value="CNY">CNY — Chinese Yuan</option>
+            <option value="UGX">UGX — Ugandan Shilling</option>
+            <option value="TZS">TZS — Tanzanian Shilling</option>
+            <option value="ZAR">ZAR — South African Rand</option>
+            <option value="NGN">NGN — Nigerian Naira</option>
+            <option value="JPY">JPY — Japanese Yen</option>
+            <option value="AED">AED — UAE Dirham</option>
+            <option value="CAD">CAD — Canadian Dollar</option>
+            <option value="AUD">AUD — Australian Dollar</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Country</label>
+        <input type="text" [(ngModel)]="convertCountry"
+               placeholder="e.g. USA, India, United Kingdom" />
+      </div>
+
+      @if (convertError) {
+        <div class="conv-error">{{ convertError }}</div>
+      }
+
+      <button class="convert-btn" (click)="convertCurrency_()" [disabled]="convertLoading">
+        {{ convertLoading ? 'Converting...' : 'Convert →' }}
+      </button>
+
+      <!-- Conversion Result -->
+      @if (conversionResult()) {
+        <div class="conversion-result">
+          <div class="result-header">
+            <span class="result-label">Conversion Result</span>
+            <span class="result-rate">
+              1 KES = {{ conversionResult()?.conversionRate }} {{ convertCurrency }}
+            </span>
+          </div>
+
+          <div class="result-amount">
+            {{ convertCurrency }} {{ customConvertedAmount() | number:'1.2-2' }}
+          </div>
+
+          <div class="result-breakdown">
+            <div class="breakdown-row">
+              <span>Amount entered</span>
+              <span>KES {{ convertAmount | number:'1.2-2' }}</span>
+            </div>
+            <div class="breakdown-row">
+              <span>Exchange rate</span>
+              <span>{{ conversionResult()?.conversionRate }}</span>
+            </div>
+            <div class="breakdown-row">
+              <span>Converted amount</span>
+              <span>{{ convertCurrency }} {{ customConvertedAmount() | number:'1.2-2' }}</span>
+            </div>
+            <div class="breakdown-row fee">
+              <span>Transaction fee (2.5%)</span>
+              <span>{{ convertCurrency }} {{ customFeeAmount() | number:'1.2-2' }}</span>
+            </div>
+            <div class="breakdown-row total">
+              <span>You receive</span>
+              <span>{{ convertCurrency }} {{ customAmountAfterFee() | number:'1.2-2' }}</span>
             </div>
           </div>
-        }
-      </div>
+
+          <div class="result-note">
+            Your full balance of KES {{ account()?.balance | number:'1.2-2' }}
+            = {{ convertCurrency }} {{ conversionResult()?.convertedBalance | number:'1.2-2' }}
+          </div>
+        </div>
+      }
     </div>
   }
 
-  <!-- Recent transactions -->
-  @if (recentTransactions().length > 0) {
-    <div class="recent-transactions">
-      <h2>Recent Transactions</h2>
-      <div class="transactions-list">
-        @for (tx of recentTransactions(); track tx.id) {
-          <div class="tx-item">
-            <div class="tx-icon">
-              {{ tx.type === 'DEPOSIT' ? '⬆️' : tx.type === 'WITHDRAWAL' ? '⬇️' : '↗️' }}
-            </div>
-            <div class="tx-info">
-              <span class="tx-type">{{ tx.type }}</span>
-              <span class="tx-desc">{{ tx.description }}</span>
-            </div>
-            <div class="tx-amount" [class.credit]="tx.type === 'DEPOSIT'"
-                 [class.debit]="tx.type !== 'DEPOSIT'">
-              {{ tx.type === 'DEPOSIT' ? '+' : '-' }}
-              {{ tx.currency }} {{ tx.amount | number:'1.2-2' }}
-            </div>
+  <!-- LOAN TAB -->
+  @if (dashTab === 'loan') {
+    <div class="loan-card">
+      <h2>🏦 Loan Application</h2>
+      <p class="converter-sub">Apply for a loan based on your WorldsBank profile</p>
+
+      @if (loanEligibility()) {
+        <div class="eligibility-banner" [class.eligible]="loanEligibility()!.eligible">
+          <span class="elig-icon">{{ loanEligibility()!.eligible ? '✅' : '⚠️' }}</span>
+          <div>
+            <span class="elig-title">{{ loanEligibility()!.eligible ? 'You are eligible for a loan' : 'Limited eligibility' }}</span>
+            <span class="elig-desc">{{ loanEligibility()!.message }}</span>
           </div>
-        }
+        </div>
+      }
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" [value]="userName()" readonly class="readonly" />
+        </div>
+        <div class="form-group">
+          <label>WBAN</label>
+          <input type="text" [value]="account()?.wban || ''" readonly class="readonly wban" />
+        </div>
       </div>
+
+      <div class="form-group">
+        <label>Loan Type</label>
+        <select [(ngModel)]="loanType">
+          <option value="PERSONAL">Personal Loan</option>
+          <option value="BUSINESS">Business Loan</option>
+          <option value="MORTGAGE">Mortgage</option>
+        </select>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Loan Amount (KES)</label>
+          <input type="number" [(ngModel)]="loanAmount" placeholder="Enter amount" />
+        </div>
+        <div class="form-group">
+          <label>Duration (months)</label>
+          <input type="number" [(ngModel)]="loanDuration" placeholder="e.g. 12" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Linked Bank (for disbursement)</label>
+        <select [(ngModel)]="loanBank">
+          @for (bank of linkedBanks(); track bank.accountNumber) {
+            <option [value]="bank.bankName">{{ bank.bankName }} — {{ bank.accountNumber }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Purpose</label>
+        <textarea [(ngModel)]="loanPurpose" placeholder="Briefly describe the purpose of this loan..." rows="3"></textarea>
+      </div>
+
+      @if (loanMessage()) {
+        <div class="loan-message" [class.error]="loanIsError()">{{ loanMessage() }}</div>
+      }
+
+      <button class="convert-btn" (click)="applyLoan()"
+              [disabled]="loanLoading() || !loanEligibility()?.eligible">
+        {{ loanLoading() ? 'Submitting...' : 'Submit Loan Application →' }}
+      </button>
     </div>
   }
 

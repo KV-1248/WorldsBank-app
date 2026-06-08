@@ -1,1 +1,134 @@
-<p>turiiiaaa</p>
+<div class="banks-page">
+  <h1>Banks</h1>
+  <p class="subtitle">Browse and link banks to your WBAN account</p>
+
+  @if (linkedBanks().length > 0) {
+    <div class="section">
+      <h2>Your Linked Banks</h2>
+      <div class="linked-list">
+        @for (bank of linkedBanks(); track bank.accountNumber) {
+          <div class="linked-card">
+            <div class="linked-info">
+              <span class="linked-name">{{ bank.bankName }}</span>
+              <span class="linked-wban">{{ bank.accountNumber }}</span>
+              <span class="linked-country">{{ bank.country }} • {{ bank.currency }}</span>
+            </div>
+            <div class="linked-right">
+              <span class="linked-balance">
+                {{ bank.currency }} {{ bank.balance | number:'1.2-2' }}
+              </span>
+              <span class="linked-status">{{ bank.status }}</span>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <div class="section">
+    <h2>Available Banks</h2>
+    <div class="banks-grid">
+      @for (bank of banks; track bank.id) {
+        <div class="bank-card" (click)="openWebsite(bank)">
+          <img [src]="bank.logo" [alt]="bank.name" class="bank-logo" />
+          <div class="bank-info">
+            <span class="bank-name">{{ bank.name }}</span>
+            <span class="bank-tagline">{{ bank.tagline }}</span>
+            <span class="bank-rating">⭐ {{ bank.rating }}</span>
+          </div>
+          <div class="bank-meta">
+            <span class="bank-country">{{ bank.headquarters }}</span>
+            <button class="link-btn"
+              [class.linked]="isLinked(bank.name)"
+              (click)="$event.stopPropagation(); openForm(bank)">
+              {{ isLinked(bank.name) ? '✓ Linked' : '+ Link' }}
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Account Opening Form Modal -->
+  @if (showForm() && formBank()) {
+    <div class="modal-overlay" (click)="closeForm()">
+      <div class="modal" (click)="$event.stopPropagation()">
+        <button class="modal-close" (click)="closeForm()">✕</button>
+
+        <div class="modal-header">
+          <img [src]="formBank()!.logo" [alt]="formBank()!.name" class="modal-logo" />
+          <div>
+            <h2>Open {{ formBank()!.name }} Account</h2>
+            <p>via WorldsBank — your WBAN becomes your account number</p>
+          </div>
+        </div>
+
+        <div class="form-section-label">Your Details</div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" [value]="userName" readonly class="readonly" />
+          </div>
+          <div class="form-group">
+            <label>WBAN (Account Number)</label>
+            <input type="text" [value]="userWban" readonly class="readonly wban-input" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Email</label>
+            <input type="text" [value]="userEmail" readonly class="readonly" />
+          </div>
+          <div class="form-group">
+            <label>Country</label>
+            <input type="text" [value]="formBank()!.headquarters" readonly class="readonly" />
+          </div>
+        </div>
+
+        <div class="form-section-label">Account Preferences</div>
+
+        <div class="form-group">
+          <label>Account Type</label>
+          <select [(ngModel)]="selectedAccountType">
+            @for (type of formBank()!.accountTypes; track type.name) {
+              <option [value]="type.name">{{ type.name }} — {{ type.description }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Currency</label>
+          <select [(ngModel)]="selectedCurrency">
+            <option value="KES">KES — Kenyan Shilling</option>
+            <option value="USD">USD — US Dollar</option>
+            <option value="EUR">EUR — Euro</option>
+            <option value="GBP">GBP — British Pound</option>
+            <option value="INR">INR — Indian Rupee</option>
+            <option value="CNY">CNY — Chinese Yuan</option>
+            <option value="UGX">UGX — Ugandan Shilling</option>
+            <option value="TZS">TZS — Tanzanian Shilling</option>
+          </select>
+        </div>
+
+        <div class="wban-notice">
+          <span class="notice-icon">ℹ️</span>
+          <span>Your WBAN <strong>{{ userWban }}</strong> will be used as your {{ formBank()!.name }} account number — no separate account number needed.</span>
+        </div>
+
+        @if (message()) {
+          <div class="form-message" [class.error]="isError()">{{ message() }}</div>
+        }
+
+        <button class="open-btn" (click)="submitForm()" [disabled]="loading()">
+          {{ loading() ? 'Opening account...' : 'Open ' + formBank()!.shortName + ' Account →' }}
+        </button>
+      </div>
+    </div>
+  }
+
+  @if (successToast()) {
+    <div class="toast success">{{ successToast() }}</div>
+  }
+</div>

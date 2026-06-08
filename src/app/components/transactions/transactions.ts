@@ -2,6 +2,7 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule, DecimalPipe, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TransactionService } from '../../services/transaction';
+import { AccountService } from '../../services/account';
 
 @Component({
   selector: 'app-transactions',
@@ -11,6 +12,7 @@ import { TransactionService } from '../../services/transaction';
 })
 export class Transactions implements OnInit {
   private txService = inject(TransactionService);
+  private accountService = inject(AccountService);
 
   activeTab = 'history';
   amount = 0;
@@ -22,15 +24,50 @@ export class Transactions implements OnInit {
   loading = false;
 
   transactions = signal<any[]>([]);
+  userWban = signal<string>('');
+  selectedTx = signal<any>(null);
 
   ngOnInit() {
     this.loadHistory();
+    this.accountService.getMyAccount().subscribe({
+      next: (acc) => this.userWban.set(acc.wban)
+    });
   }
 
   loadHistory() {
     this.txService.getHistory().subscribe({
       next: (txs) => this.transactions.set(txs)
     });
+  }
+
+  viewDetail(tx: any) {
+    this.selectedTx.set(tx);
+  }
+
+  isCredit(tx: any): boolean {
+    if (tx.type === 'DEPOSIT') return true;
+    if (tx.type === 'WITHDRAWAL') return false;
+    if (tx.type === 'TRANSFER' || tx.type === 'CROSS_BANK_TRANSFER') {
+      return tx.receiverWban === this.userWban();
+    }
+    return false;
+  }
+
+  getTxIcon(tx: any): string {
+    if (tx.type === 'DEPOSIT') return '⬆️';
+    if (tx.type === 'WITHDRAWAL') return '⬇️';
+    if (this.isCredit(tx)) return '📥';
+    return '📤';
+  }
+
+  getTxLabel(tx: any): string {
+    if (tx.type === 'DEPOSIT') return 'Deposit';
+    if (tx.type === 'WITHDRAWAL') return 'Withdrawal';
+    if (tx.type === 'CROSS_BANK_TRANSFER') return 'Cross Bank Transfer';
+    if (tx.type === 'TRANSFER') {
+      return this.isCredit(tx) ? 'Transfer Received' : 'Transfer Sent';
+    }
+    return tx.type;
   }
 
   deposit() {

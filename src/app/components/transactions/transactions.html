@@ -1,7 +1,6 @@
 <div class="transactions-page">
   <h1>Transactions</h1>
 
-  <!-- Tab switcher -->
   <div class="tabs">
     <button [class.active]="activeTab === 'deposit'" (click)="activeTab = 'deposit'">Deposit</button>
     <button [class.active]="activeTab === 'withdraw'" (click)="activeTab = 'withdraw'">Withdraw</button>
@@ -10,7 +9,6 @@
     <button [class.active]="activeTab === 'history'" (click)="activeTab = 'history'">History</button>
   </div>
 
-  <!-- Deposit -->
   @if (activeTab === 'deposit') {
     <div class="transaction-card">
       <h2>Deposit Funds</h2>
@@ -29,7 +27,6 @@
     </div>
   }
 
-  <!-- Withdraw -->
   @if (activeTab === 'withdraw') {
     <div class="transaction-card">
       <h2>Withdraw Funds</h2>
@@ -48,7 +45,6 @@
     </div>
   }
 
-  <!-- Transfer -->
   @if (activeTab === 'transfer') {
     <div class="transaction-card">
       <h2>Transfer to WBAN</h2>
@@ -71,7 +67,6 @@
     </div>
   }
 
-  <!-- Cross Bank Transfer -->
   @if (activeTab === 'cross') {
     <div class="transaction-card">
       <h2>Cross Bank Transfer</h2>
@@ -94,7 +89,6 @@
     </div>
   }
 
-  <!-- History -->
   @if (activeTab === 'history') {
     <div class="transaction-card">
       <h2>Transaction History</h2>
@@ -102,22 +96,110 @@
         <p class="empty">No transactions yet.</p>
       }
       @for (tx of transactions(); track tx.id) {
-        <div class="tx-row">
-          <div class="tx-icon">
-            {{ tx.type === 'DEPOSIT' ? '⬆️' : tx.type === 'WITHDRAWAL' ? '⬇️' : '↗️' }}
-          </div>
+        <div class="tx-row" (click)="viewDetail(tx)">
+          <div class="tx-icon">{{ getTxIcon(tx) }}</div>
           <div class="tx-info">
-            <span class="tx-type">{{ tx.type }}</span>
+            <span class="tx-type">{{ getTxLabel(tx) }}</span>
             <span class="tx-desc">{{ tx.description }}</span>
+            @if (tx.senderWban && tx.receiverWban) {
+              <span class="tx-parties">{{ tx.senderWban }} → {{ tx.receiverWban }}</span>
+            }
+            @if (tx.linkedBankName) {
+              <span class="tx-parties">To {{ tx.linkedBankName }} ({{ tx.linkedBankCountry }})</span>
+            }
             <span class="tx-date">{{ tx.createdAt | date:'short' }}</span>
           </div>
-          <div class="tx-amount" [class.credit]="tx.type === 'DEPOSIT'"
-               [class.debit]="tx.type !== 'DEPOSIT'">
-            {{ tx.type === 'DEPOSIT' ? '+' : '-' }}
+          <div class="tx-amount"
+               [class.credit]="isCredit(tx)"
+               [class.debit]="!isCredit(tx)">
+            {{ isCredit(tx) ? '+' : '-' }}
             {{ tx.currency }} {{ tx.amount | number:'1.2-2' }}
           </div>
+          <span class="tx-arrow">›</span>
         </div>
       }
+    </div>
+  }
+
+  <!-- Transaction Detail Modal -->
+  @if (selectedTx()) {
+    <div class="modal-overlay" (click)="selectedTx.set(null)">
+      <div class="modal" (click)="$event.stopPropagation()">
+        <button class="modal-close" (click)="selectedTx.set(null)">✕</button>
+
+        <div class="modal-icon">{{ getTxIcon(selectedTx()!) }}</div>
+        <h2 class="modal-title">{{ getTxLabel(selectedTx()!) }}</h2>
+        <div class="modal-amount"
+             [class.credit]="isCredit(selectedTx()!)"
+             [class.debit]="!isCredit(selectedTx()!)">
+          {{ isCredit(selectedTx()!) ? '+' : '-' }}
+          {{ selectedTx()!.currency }} {{ selectedTx()!.amount | number:'1.2-2' }}
+        </div>
+
+        <div class="modal-status" [class.success]="selectedTx()!.status === 'SUCCESS'">
+          {{ selectedTx()!.status }}
+        </div>
+
+        <div class="modal-divider"></div>
+
+        <div class="detail-list">
+          <div class="detail-row">
+            <span class="detail-label">Transaction ID</span>
+            <span class="detail-value mono">#{{ selectedTx()!.id }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Type</span>
+            <span class="detail-value">{{ selectedTx()!.type }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Description</span>
+            <span class="detail-value">{{ selectedTx()!.description || '—' }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Currency</span>
+            <span class="detail-value">{{ selectedTx()!.currency }}</span>
+          </div>
+          @if (selectedTx()!.exchangeRate && selectedTx()!.exchangeRate !== 1) {
+            <div class="detail-row">
+              <span class="detail-label">Exchange Rate</span>
+              <span class="detail-value">{{ selectedTx()!.exchangeRate }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Converted Amount</span>
+              <span class="detail-value">
+                {{ selectedTx()!.currency }} {{ selectedTx()!.convertedAmount | number:'1.2-2' }}
+              </span>
+            </div>
+          }
+          @if (selectedTx()!.senderWban) {
+            <div class="detail-row">
+              <span class="detail-label">From</span>
+              <span class="detail-value mono">{{ selectedTx()!.senderWban }}</span>
+            </div>
+          }
+          @if (selectedTx()!.receiverWban) {
+            <div class="detail-row">
+              <span class="detail-label">To</span>
+              <span class="detail-value mono">{{ selectedTx()!.receiverWban }}</span>
+            </div>
+          }
+          @if (selectedTx()!.linkedBankName) {
+            <div class="detail-row">
+              <span class="detail-label">Bank</span>
+              <span class="detail-value">{{ selectedTx()!.linkedBankName }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Country</span>
+              <span class="detail-value">{{ selectedTx()!.linkedBankCountry }}</span>
+            </div>
+          }
+          <div class="detail-row">
+            <span class="detail-label">Date & Time</span>
+            <span class="detail-value">{{ selectedTx()!.createdAt | date:'medium' }}</span>
+          </div>
+        </div>
+
+      </div>
     </div>
   }
 </div>

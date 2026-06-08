@@ -150,6 +150,12 @@
       font-size: 12px;
       color: rgba(255, 255, 255, 0.4);
     }
+    .tx-parties {
+  display: block;
+  font-size: 11px;
+  color: rgba(255,255,255,0.3);
+  font-family: 'Courier New', monospace;
+}
 
     .tx-date {
       display: block;
@@ -171,4 +177,140 @@
   text-align: center;
   color: rgba(255, 255, 255, 0.4);
   padding: 40px 0;
+}
+.tx-arrow {
+  color: rgba(255,255,255,0.3);
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.tx-row {
+  cursor: pointer;
+  transition: background 0.15s;
+  border-radius: 8px;
+  margin: 0 -8px;
+  padding: 14px 8px !important;
+
+  &:hover {
+    background: rgba(255,255,255,0.04);
+  }
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.modal {
+  background: #16213e;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 16px;
+  padding: 32px;
+  width: 100%;
+  max-width: 460px;
+  position: relative;
+  max-height: 90vh;
+  overflow-y: auto;
+  text-align: center;
+}
+
+.modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.5);
+  font-size: 20px;
+  cursor: pointer;
+
+  &:hover { color: white; }
+}
+
+.modal-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+
+.modal-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: white;
+  margin: 0 0 12px;
+  font-family: 'Georgia', serif;
+}
+
+.modal-amount {
+  font-size: 36px;
+  font-weight: 700;
+  font-family: 'Georgia', serif;
+  margin-bottom: 12px;
+
+  &.credit { color: #00e676; }
+  &.debit { color: #ff6b6b; }
+}
+
+.modal-status {
+  display: inline-block;
+  padding: 4px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  letter-spacing: 1px;
+  background: rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.5);
+  margin-bottom: 20px;
+
+  &.success {
+    background: rgba(0,230,118,0.1);
+    color: #00e676;
+  }
+}
+
+.modal-divider {
+  height: 0.5px;
+  background: rgba(255,255,255,0.08);
+  margin: 0 0 20px;
+}
+
+.detail-list {
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 11px 0;
+  border-bottom: 0.5px solid rgba(255,255,255,0.06);
+
+  &:last-child { border-bottom: none; }
+
+  .detail-label {
+    font-size: 12px;
+    color: rgba(255,255,255,0.4);
+    flex-shrink: 0;
+  }
+
+  .detail-value {
+    font-size: 13px;
+    color: white;
+    font-weight: 500;
+    text-align: right;
+    word-break: break-all;
+
+    &.mono {
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      color: rgba(255,255,255,0.7);
+    }
+  }
 }

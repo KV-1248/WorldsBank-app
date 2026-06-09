@@ -1,4 +1,4 @@
-<div class="app-layout" [class.sidebar-open]="sidebarOpen">
+<div class="app-layout" [class.sidebar-open]="sidebarOpen" [class.light-mode]="!isDarkMode()">
 
   <!-- Sidebar -->
   <aside class="sidebar" [class.open]="sidebarOpen">
@@ -22,6 +22,10 @@
       <a routerLink="/banks" routerLinkActive="active" (click)="closeSidebar()">
         <span class="nav-icon">🏦</span>
         <span class="nav-label">Banks</span>
+      </a>
+      <a routerLink="/loans" routerLinkActive="active" (click)="closeSidebar()">
+        <span class="nav-icon">📋</span>
+        <span class="nav-label">Loans</span>
       </a>
       <a routerLink="/ai-assistant" routerLinkActive="active" (click)="closeSidebar()">
         <span class="nav-icon">🤖</span>
@@ -50,7 +54,6 @@
     <header class="topbar">
       <button class="hamburger" (click)="toggleSidebar()">☰</button>
 
-      <!-- Sticky search -->
       <div class="search-bar">
         <span class="search-icon">🔍</span>
         <input
@@ -62,11 +65,30 @@
       </div>
 
       <div class="topbar-right">
-        <button class="notification-btn">
-          <span>🔔</span>
+        <!-- GPS indicator -->
+        @if (locationDetected()) {
+          <div class="location-chip">
+            📍 {{ detectedLocation() }} · {{ detectedCurrency() }}
+          </div>
+        }
+
+        <!-- Dark/Light toggle -->
+        <button class="theme-toggle" (click)="toggleTheme()" [title]="isDarkMode() ? 'Switch to light mode' : 'Switch to dark mode'">
+          {{ isDarkMode() ? '☀️' : '🌙' }}
         </button>
+
+        <span class="user-name">{{ userName() }}</span>
+        <div class="user-avatar">{{ userInitial() }}</div>
       </div>
     </header>
+
+    <!-- GPS Toast -->
+    @if (showLocationToast()) {
+      <div class="location-toast">
+        📍 Location detected: <strong>{{ detectedLocation() }}</strong> —
+        showing rates in <strong>{{ detectedCurrency() }}</strong>
+      </div>
+    }
 
     <!-- Page content -->
     <main class="page-content">

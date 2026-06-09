@@ -1,0 +1,159 @@
+<div class="loans-page">
+  <h1>My Loans</h1>
+  <p class="subtitle">Track your loan applications and repayment progress</p>
+
+  @if (loading()) {
+    <div class="loading">Loading your loans...</div>
+  }
+
+  @if (!loading() && loans().length === 0) {
+    <div class="empty-state">
+      <div class="empty-icon">📋</div>
+      <h2>No loans yet</h2>
+      <p>Apply for a loan from the Dashboard → Apply for Loan tab</p>
+    </div>
+  }
+
+  @if (loans().length > 0) {
+    <div class="loans-grid">
+      @for (loan of loans(); track loan.id) {
+        <div class="loan-card" (click)="viewLoan(loan)">
+
+          <div class="loan-card-header">
+            <div class="loan-type-badge">{{ loan.loanType }}</div>
+            <div class="loan-status" [class]="getStatusColor(loan.status)">
+              {{ getStatusIcon(loan.status) }} {{ loan.status }}
+            </div>
+          </div>
+
+          <div class="loan-amount">
+            KES {{ loan.amount | number:'1.2-2' }}
+          </div>
+
+          <div class="loan-meta">
+            <div class="meta-item">
+              <span class="meta-label">Interest Rate</span>
+              <span class="meta-value">{{ loan.interestRate }}% p.a.</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Monthly Payment</span>
+              <span class="meta-value">KES {{ loan.monthlyRepayment | number:'1.2-2' }}</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Duration</span>
+              <span class="meta-value">{{ loan.durationMonths }} months</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Months Remaining</span>
+              <span class="meta-value">{{ getMonthsRemaining(loan) }}</span>
+            </div>
+          </div>
+
+          <!-- Progress bar -->
+          @if (loan.status !== 'PENDING' && loan.status !== 'REJECTED') {
+            <div class="progress-section">
+              <div class="progress-labels">
+                <span>Repaid: KES {{ getAmountPaid(loan) | number:'1.0-0' }}</span>
+                <span>{{ getProgress(loan) }}%</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill" [style.width.%]="getProgress(loan)"></div>
+              </div>
+              <div class="progress-balance">
+                Balance: KES {{ getBalanceRemaining(loan) | number:'1.2-2' }}
+              </div>
+            </div>
+          }
+
+          <div class="loan-footer">
+            <span class="loan-date">Applied {{ loan.appliedAt | date:'mediumDate' }}</span>
+            <span class="view-detail">View details ›</span>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Loan Detail Modal -->
+  @if (selectedLoan()) {
+    <div class="modal-overlay" (click)="selectedLoan.set(null)">
+      <div class="modal" (click)="$event.stopPropagation()">
+        <button class="modal-close" (click)="selectedLoan.set(null)">✕</button>
+
+        <div class="modal-status-icon">{{ getStatusIcon(selectedLoan()!.status) }}</div>
+        <h2>{{ selectedLoan()!.loanType }} Loan</h2>
+        <div class="modal-amount">KES {{ selectedLoan()!.amount | number:'1.2-2' }}</div>
+
+        <div class="modal-status-badge" [class]="getStatusColor(selectedLoan()!.status)">
+          {{ selectedLoan()!.status }}
+        </div>
+
+        @if (selectedLoan()!.status !== 'PENDING' && selectedLoan()!.status !== 'REJECTED') {
+          <div class="modal-progress">
+            <div class="modal-progress-bar">
+              <div class="modal-progress-fill"
+                   [style.width.%]="getProgress(selectedLoan()!)">
+              </div>
+            </div>
+            <span class="modal-progress-pct">{{ getProgress(selectedLoan()!) }}% repaid</span>
+          </div>
+        }
+
+        <div class="detail-list">
+          <div class="detail-row">
+            <span class="detail-label">Loan ID</span>
+            <span class="detail-value">#{{ selectedLoan()!.id }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Type</span>
+            <span class="detail-value">{{ selectedLoan()!.loanType }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Amount</span>
+            <span class="detail-value">KES {{ selectedLoan()!.amount | number:'1.2-2' }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Interest Rate</span>
+            <span class="detail-value">{{ selectedLoan()!.interestRate }}% per annum</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Duration</span>
+            <span class="detail-value">{{ selectedLoan()!.durationMonths }} months</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Monthly Repayment</span>
+            <span class="detail-value">KES {{ selectedLoan()!.monthlyRepayment | number:'1.2-2' }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Total Repayment</span>
+            <span class="detail-value">KES {{ selectedLoan()!.totalRepayment | number:'1.2-2' }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Amount Paid</span>
+            <span class="detail-value credit">KES {{ getAmountPaid(selectedLoan()!) | number:'1.2-2' }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Balance Remaining</span>
+            <span class="detail-value debit">KES {{ getBalanceRemaining(selectedLoan()!) | number:'1.2-2' }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Months Remaining</span>
+            <span class="detail-value">{{ getMonthsRemaining(selectedLoan()!) }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Linked Bank</span>
+            <span class="detail-value">{{ selectedLoan()!.linkedBankName || '—' }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Purpose</span>
+            <span class="detail-value">{{ selectedLoan()!.purpose }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Applied On</span>
+            <span class="detail-value">{{ selectedLoan()!.appliedAt | date:'medium' }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</div>

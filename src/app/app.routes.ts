@@ -56,6 +56,11 @@ export const routes: Routes = [
           ),
       },
       {
+  path: 'loans',
+  loadComponent: () =>
+    import('./components/loans/loans').then((m) => m.Loans),
+},
+      {
         path: 'ai-assistant',
         loadComponent: () =>
           import('./components/ai-assistant/ai-assistant').then(

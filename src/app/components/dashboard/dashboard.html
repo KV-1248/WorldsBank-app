@@ -13,18 +13,18 @@
   </div>
 
   <!-- Balance card -->
-  <div class="balance-card">
-    <div class="balance-info">
-      <span class="balance-label">Total Balance</span>
-      <span class="balance-amount">
-        {{ account()?.baseCurrency }} {{ account()?.balance | number:'1.2-2' }}
-      </span>
-      <span class="account-status" [class.active]="account()?.status === 'ACTIVE'">
-        {{ account()?.status || 'Loading...' }}
-      </span>
-    </div>
-    <div class="balance-icon">💳</div>
+<div class="balance-card">
+  <div class="balance-info">
+    <span class="balance-label">Total Balance</span>
+    <span class="balance-amount">
+      {{ account()?.baseCurrency }} {{ account()?.balance | number:'1.2-2' }}
+    </span>
+    <span class="account-status" [class.active]="account()?.status === 'ACTIVE'">
+      {{ account()?.status || 'Loading...' }}
+    </span>
   </div>
+  <div class="balance-icon">💳</div>
+</div>
 
   <!-- Dashboard Tabs -->
   <div class="dash-tabs">
@@ -36,32 +36,56 @@
   <!-- OVERVIEW TAB -->
   @if (dashTab === 'overview') {
 
-    <!-- Regional conversion -->
-    @if (conversion()) {
-      <div class="conversion-card">
-        <h3>📍 Regional Value — USD</h3>
-        <div class="conversion-details">
-          <div class="conversion-item">
-            <span class="conv-label">USD Value</span>
-            <span class="conv-value">
-              USD {{ conversion()?.convertedBalance | number:'1.2-2' }}
+<!-- GPS-aware regional conversion — shows right below balance -->
+@if (locationReady()) {
+  <div class="regional-card">
+    <div class="regional-header">
+      <div class="regional-left">
+        <span class="regional-flag">📍</span>
+        <div>
+          <span class="regional-title">
+            {{ detectedCountry() }} · {{ detectedCurrency() }}
+          </span>
+          <span class="regional-sub">Live regional value of your balance</span>
+        </div>
+      </div>
+      @if (locationConversionLoading()) {
+        <span class="regional-loading">Converting...</span>
+      }
+    </div>
+
+    @if (locationConversion() && !locationConversionLoading()) {
+      <div class="regional-body">
+        <div class="regional-converted">
+          {{ detectedCurrency() }}
+          {{ locationConversion().convertedBalance | number:'1.2-2' }}
+        </div>
+        <div class="regional-details">
+          <div class="regional-detail-item">
+            <span class="detail-label">Exchange Rate</span>
+            <span class="detail-val">
+              1 KES = {{ locationConversion().conversionRate }} {{ detectedCurrency() }}
             </span>
           </div>
-          <div class="conversion-item">
-            <span class="conv-label">Exchange Rate</span>
-            <span class="conv-value">
-              1 KES = {{ conversion()?.conversionRate }} USD
+          <div class="regional-detail-item">
+            <span class="detail-label">Transaction Fee (2.5%)</span>
+            <span class="detail-val fee">
+              {{ detectedCurrency() }}
+              {{ locationConversion().transactionFeeAmount | number:'1.2-2' }}
             </span>
           </div>
-          <div class="conversion-item">
-            <span class="conv-label">Transaction Fee (2.5%)</span>
-            <span class="conv-value conv-fee">
-              USD {{ conversion()?.transactionFeeAmount | number:'1.2-2' }}
+          <div class="regional-detail-item">
+            <span class="detail-label">You receive after fee</span>
+            <span class="detail-val receive">
+              {{ detectedCurrency() }}
+              {{ (locationConversion().convertedBalance - locationConversion().transactionFeeAmount) | number:'1.2-2' }}
             </span>
           </div>
         </div>
       </div>
     }
+  </div>
+}
 
     <!-- Quick actions -->
     <div class="quick-actions">

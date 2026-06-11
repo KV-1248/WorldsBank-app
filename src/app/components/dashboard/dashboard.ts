@@ -1,10 +1,11 @@
-import { Component, inject, signal, OnInit, computed } from '@angular/core';
+import { Component, inject, signal, OnInit, computed, effect } from '@angular/core';
 import { CommonModule, DecimalPipe, DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AccountService } from '../../services/account';
 import { TransactionService } from '../../services/transaction';
 import { Auth } from '../../services/auth';
+import { LocationService } from '../../services/location';
 import { HttpClient } from '@angular/common/http';
 
 @Component({
@@ -17,18 +18,27 @@ export class Dashboard implements OnInit {
   private accountService = inject(AccountService);
   private transactionService = inject(TransactionService);
   private auth = inject(Auth);
+  private locationService = inject(LocationService);
   private http = inject(HttpClient);
 
   private baseUrl = 'http://localhost:8080/api/v1';
 
-  // ── Core signals ──────────────────────────────────────
+  // ── Core ─────────────────────────────────────────────
   account = signal<any>(null);
   linkedBanks = signal<any[]>([]);
   recentTransactions = signal<any[]>([]);
-  conversion = signal<any>(null);
   loading = signal(true);
   userWban = signal<string>('');
   userName = this.auth.currentUser;
+
+  // ── Location-aware conversion ─────────────────────────
+  locationConversion = signal<any>(null);
+  locationConversionLoading = signal(false);
+
+  // Expose location signals
+  detectedCountry = this.locationService.detectedCountry;
+  detectedCurrency = this.locationService.detectedCurrency;
+  locationReady = this.locationService.locationReady;
 
   // ── Dashboard tab ─────────────────────────────────────
   dashTab = 'overview';
@@ -46,13 +56,8 @@ export class Dashboard implements OnInit {
     return this.convertAmount * rate;
   });
 
-  customFeeAmount = computed(() => {
-    return this.customConvertedAmount() * 0.025;
-  });
-
-  customAmountAfterFee = computed(() => {
-    return this.customConvertedAmount() - this.customFeeAmount();
-  });
+  customFeeAmount = computed(() => this.customConvertedAmount() * 0.025);
+  customAmountAfterFee = computed(() => this.customConvertedAmount() - this.customFeeAmount());
 
   // ── Loan ─────────────────────────────────────────────
   loanType = 'PERSONAL';
@@ -65,6 +70,19 @@ export class Dashboard implements OnInit {
   loanIsError = signal(false);
   loanEligibility = signal<any>(null);
 
+  constructor() {
+    // React to location changes automatically
+    effect(() => {
+      const currency = this.locationService.detectedCurrency();
+      const country = this.locationService.detectedCountry();
+      const ready = this.locationService.locationReady();
+
+      if (ready && currency && country && this.account()) {
+        this.loadLocationConversion(currency, country);
+      }
+    });
+  }
+
   ngOnInit() {
     this.loadDashboard();
   }
@@ -75,7 +93,14 @@ export class Dashboard implements OnInit {
         this.account.set(acc);
         this.userWban.set(acc.wban);
         this.loading.set(false);
-        this.loadDefaultConversion();
+
+        // If location already detected, load conversion immediately
+        if (this.locationService.locationReady()) {
+          this.loadLocationConversion(
+            this.locationService.detectedCurrency(),
+            this.locationService.detectedCountry()
+          );
+        }
       },
       error: () => this.loading.set(false)
     });
@@ -92,10 +117,16 @@ export class Dashboard implements OnInit {
     });
   }
 
-  loadDefaultConversion() {
-    this.accountService.getRegionalConversion('USD', 'USA').subscribe({
-      next: (conv) => this.conversion.set(conv),
-      error: () => {}
+  loadLocationConversion(currency: string, country: string) {
+    if (!currency || !country) return;
+    this.locationConversionLoading.set(true);
+
+    this.accountService.getRegionalConversion(currency, country).subscribe({
+      next: (conv) => {
+        this.locationConversion.set(conv);
+        this.locationConversionLoading.set(false);
+      },
+      error: () => this.locationConversionLoading.set(false)
     });
   }
 
@@ -109,14 +140,12 @@ export class Dashboard implements OnInit {
       this.convertError = 'Please enter a country.';
       return;
     }
-
     this.convertLoading = true;
     this.convertError = '';
     this.conversionResult.set(null);
 
     this.accountService.getRegionalConversion(
-      this.convertCurrency,
-      this.convertCountry
+      this.convertCurrency, this.convertCountry
     ).subscribe({
       next: (res) => {
         this.convertLoading = false;
@@ -124,7 +153,7 @@ export class Dashboard implements OnInit {
       },
       error: (err) => {
         this.convertLoading = false;
-        this.convertError = err.error?.message || 'Conversion failed. Check currency and country.';
+        this.convertError = err.error?.message || 'Conversion failed.';
       }
     });
   }
@@ -153,7 +182,6 @@ export class Dashboard implements OnInit {
       this.loanIsError.set(true);
       return;
     }
-
     this.loanLoading.set(true);
     this.loanMessage.set('');
 
@@ -168,7 +196,7 @@ export class Dashboard implements OnInit {
         this.loanLoading.set(false);
         this.loanIsError.set(false);
         this.loanMessage.set(
-          `Loan application submitted! Monthly repayment: KES ${res.monthlyRepayment} for ${res.durationMonths} months. Total: KES ${res.totalRepayment}`
+          `Loan submitted! Monthly: KES ${res.monthlyRepayment} × ${res.durationMonths} months. Total: KES ${res.totalRepayment}`
         );
       },
       error: (err) => {
@@ -183,10 +211,7 @@ export class Dashboard implements OnInit {
   isCredit(tx: any): boolean {
     if (tx.type === 'DEPOSIT') return true;
     if (tx.type === 'WITHDRAWAL') return false;
-    if (tx.type === 'TRANSFER' || tx.type === 'CROSS_BANK_TRANSFER') {
-      return tx.receiverWban === this.userWban();
-    }
-    return false;
+    return tx.receiverWban === this.userWban();
   }
 
   getTxIcon(tx: any): string {
@@ -200,9 +225,7 @@ export class Dashboard implements OnInit {
     if (tx.type === 'DEPOSIT') return 'Deposit';
     if (tx.type === 'WITHDRAWAL') return 'Withdrawal';
     if (tx.type === 'CROSS_BANK_TRANSFER') return 'Cross Bank Transfer';
-    if (tx.type === 'TRANSFER') {
-      return this.isCredit(tx) ? 'Transfer Received' : 'Transfer Sent';
-    }
+    if (tx.type === 'TRANSFER') return this.isCredit(tx) ? 'Transfer Received' : 'Transfer Sent';
     return tx.type;
   }
 }

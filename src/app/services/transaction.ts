@@ -7,7 +7,7 @@ import { Observable } from 'rxjs';
 })
 export class TransactionService {
   private http = inject(HttpClient);
-  private baseUrl = 'http://localhost:8080/api/v1/transactions';
+  private baseUrl = 'https://worldsbank.cfd/api/v1/transactions';
 
   private getHeaders(): HttpHeaders {
     const token = localStorage.getItem('wb_token');

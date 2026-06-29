@@ -7,7 +7,7 @@ import { Observable } from 'rxjs';
 })
 export class LoanService {
   private http = inject(HttpClient);
-  private baseUrl = 'http://localhost:8080/api/v1/loans';
+  private baseUrl = 'https://worldsbank.cfd/api/v1/loans';
 
   getMyLoans(): Observable<any[]> {
     return this.http.get<any[]>(`${this.baseUrl}/my-loans`);

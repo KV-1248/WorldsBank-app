@@ -21,7 +21,7 @@ export class Dashboard implements OnInit {
   private locationService = inject(LocationService);
   private http = inject(HttpClient);
 
-  private baseUrl = 'http://localhost:8080/api/v1';
+  private baseUrl = 'https://worldsbank.cfd/api/v1/accounts';
 
   // ── Core ─────────────────────────────────────────────
   account = signal<any>(null);

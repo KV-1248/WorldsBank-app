@@ -7,7 +7,7 @@ import { Observable } from 'rxjs';
 })
 export class AccountService {
   private http = inject(HttpClient);
-  private baseUrl = 'http://localhost:8080/api/v1/accounts';
+  private baseUrl = 'https://worldsbank.cfd/api/v1/accounts';
 
   // --- Get my account details ---
   getMyAccount(): Observable<any> {

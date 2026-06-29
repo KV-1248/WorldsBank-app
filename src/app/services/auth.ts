@@ -10,7 +10,7 @@ export class Auth {
   private http = inject(HttpClient);
   private router = inject(Router);
 
-  private baseUrl = 'http://localhost:8080/api/v1/auth';
+  private baseUrl = 'https://worldsbank.cfd/api/v1/auth';
   private requestTimeoutMs = 30000;
 
   // --- signals ---

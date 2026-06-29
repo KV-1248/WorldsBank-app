@@ -7,7 +7,7 @@ import { Observable } from 'rxjs';
 })
 export class AiService {
   private http = inject(HttpClient);
-  private baseUrl = 'http://localhost:8080/api/v1/ai';
+  private baseUrl = 'https://worldsbank.cfd/api/v1/ai';
 
   // --- Ask AI Assistant ---
   ask(question: string): Observable<any> {

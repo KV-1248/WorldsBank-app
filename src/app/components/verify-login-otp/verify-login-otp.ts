@@ -32,7 +32,7 @@ export class VerifyLoginOtp {
     this.auth.verifyLoginOtp(email, this.otp).subscribe({
       next: () => {
         this.loading = false;
-        this.router.navigate(['/dashboard']);
+        this.router.navigate(['/app/dashboard']);
       },
       error: (err) => {
         this.loading = false;

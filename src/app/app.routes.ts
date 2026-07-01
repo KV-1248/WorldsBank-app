@@ -2,7 +2,11 @@ import { Routes } from '@angular/router';
 import { authGuard } from './guards/auth-guard';
 
 export const routes: Routes = [
-  { path: '', redirectTo: 'login', pathMatch: 'full' },
+  {
+    path: '',
+    loadComponent: () =>
+      import('./landing/landing').then((m) => m.Landing),
+  },
   {
     path: 'login',
     loadComponent: () =>
@@ -56,10 +60,10 @@ export const routes: Routes = [
           ),
       },
       {
-  path: 'loans',
-  loadComponent: () =>
-    import('./components/loans/loans').then((m) => m.Loans),
-},
+        path: 'loans',
+        loadComponent: () =>
+          import('./components/loans/loans').then((m) => m.Loans),
+      },
       {
         path: 'ai-assistant',
         loadComponent: () =>

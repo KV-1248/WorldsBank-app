@@ -5,7 +5,7 @@ export const routes: Routes = [
   {
     path: '',
     loadComponent: () =>
-      import('./landing/landing').then((m) => m.Landing),
+      import('./components/landing/landing').then((m) => m.Landing),
   },
   {
     path: 'login',
@@ -30,18 +30,48 @@ export const routes: Routes = [
       ),
   },
   {
-    path: 'app',
+    path: '',
     loadComponent: () =>
       import('./components/layout/layout').then((m) => m.Layout),
     canActivate: [authGuard],
     children: [
-      { path: 'dashboard', loadComponent: () => import('./components/dashboard/dashboard').then((m) => m.Dashboard) },
-      { path: 'transactions', loadComponent: () => import('./components/transactions/transactions').then((m) => m.Transactions) },
-      { path: 'banks', loadComponent: () => import('./components/bank-list/bank-list').then((m) => m.BankList) },
-      { path: 'bank/:id', loadComponent: () => import('./components/bank-details/bank-details').then((m) => m.BankDetails) },
-      { path: 'loans', loadComponent: () => import('./components/loans/loans').then((m) => m.Loans) },
-      { path: 'ai-assistant', loadComponent: () => import('./components/ai-assistant/ai-assistant').then((m) => m.AiAssistant) },
+      {
+        path: 'dashboard',
+        loadComponent: () =>
+          import('./components/dashboard/dashboard').then((m) => m.Dashboard),
+      },
+      {
+        path: 'transactions',
+        loadComponent: () =>
+          import('./components/transactions/transactions').then(
+            (m) => m.Transactions
+          ),
+      },
+      {
+        path: 'banks',
+        loadComponent: () =>
+          import('./components/bank-list/bank-list').then((m) => m.BankList),
+      },
+      {
+        path: 'bank/:id',
+        loadComponent: () =>
+          import('./components/bank-details/bank-details').then(
+            (m) => m.BankDetails
+          ),
+      },
+      {
+        path: 'loans',
+        loadComponent: () =>
+          import('./components/loans/loans').then((m) => m.Loans),
+      },
+      {
+        path: 'ai-assistant',
+        loadComponent: () =>
+          import('./components/ai-assistant/ai-assistant').then(
+            (m) => m.AiAssistant
+          ),
+      },
     ],
   },
-  { path: '**', redirectTo: '' },
+  { path: '**', redirectTo: 'login' },
 ];
